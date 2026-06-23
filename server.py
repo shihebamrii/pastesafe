@@ -136,13 +136,13 @@ def get_and_burn_paste(paste_id):
         "iv": row["iv"]
     })
 
+# Initialize SQLite database on import/startup
+init_db()
+
+# Start background cleanup thread as daemon
+sweeper_thread = threading.Thread(target=expired_pastes_sweeper, daemon=True)
+sweeper_thread.start()
+
 if __name__ == '__main__':
-    # Initialize SQLite database
-    init_db()
-    
-    # Start background cleanup thread as daemon
-    sweeper_thread = threading.Thread(target=expired_pastes_sweeper, daemon=True)
-    sweeper_thread.start()
-    
     print(f"[*] PasteSafe Portal running on http://localhost:{PORT}")
     app.run(host="0.0.0.0", port=PORT, debug=False)

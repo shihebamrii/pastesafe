@@ -1,0 +1,1 @@
+# PasteSafe tests package

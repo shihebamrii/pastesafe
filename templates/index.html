@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PasteSafe - Zero-Knowledge Secret Sharing Portal</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-color: #0c0d12;
+            --panel-bg: rgba(18, 20, 32, 0.7);
+            --border-color: rgba(255, 255, 255, 0.08);
+            --accent-primary: #7f5af0;
+            --accent-secondary: #2cb67d;
+            --text-main: #fffffe;
+            --text-muted: #94a1b2;
+            --danger: #ff5e5e;
+            --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            background-image: 
+                radial-gradient(circle at 50% 15%, rgba(127, 90, 240, 0.12) 0%, transparent 50%),
+                radial-gradient(circle at 10% 80%, rgba(44, 182, 125, 0.05) 0%, transparent 40%);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+        }
+
+        .glass-card {
+            background: var(--panel-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            box-shadow: var(--glass-shadow);
+            padding: 2.5rem;
+            width: 100%;
+            max-width: 600px;
+            transition: border-color 0.3s;
+        }
+
+        .glass-card:hover {
+            border-color: rgba(127, 90, 240, 0.25);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .header h1 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 2.2rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #fffffe 0%, #7f5af0 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .header p {
+            color: var(--text-muted);
+            margin-top: 0.5rem;
+            font-size: 0.95rem;
+        }
+
+        /* View Panels */
+        .panel {
+            display: none;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .panel.active {
+            display: flex;
+        }
+
+        textarea {
+            width: 100%;
+            height: 180px;
+            background: rgba(10, 11, 16, 0.8);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            color: var(--text-main);
+            padding: 1rem;
+            font-size: 0.95rem;
+            outline: none;
+            resize: none;
+            transition: border-color 0.2s;
+        }
+
+        textarea:focus {
+            border-color: var(--accent-primary);
+        }
+
+        .form-row {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .select-wrapper {
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+        }
+
+        .select-wrapper label {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+
+        select {
+            background: rgba(10, 11, 16, 0.8);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 0.6rem 1rem;
+            border-radius: 8px;
+            outline: none;
+            font-size: 0.9rem;
+            cursor: pointer;
+        }
+
+        button {
+            background: linear-gradient(135deg, var(--accent-primary) 0%, #6236ff 100%);
+            border: none;
+            color: white;
+            padding: 0.9rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: opacity 0.2s, transform 0.1s;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        button:hover {
+            opacity: 0.9;
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+
+        /* Result Panel */
+        .result-box {
+            padding: 1.25rem;
+            background: rgba(44, 182, 125, 0.08);
+            border: 1px solid rgba(44, 182, 125, 0.25);
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .result-title {
+            color: var(--accent-secondary);
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .copy-widget {
+            display: flex;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid var(--border-color);
+            padding: 0.6rem 0.85rem;
+            border-radius: 8px;
+            gap: 0.75rem;
+        }
+
+        .copy-widget span {
+            flex-grow: 1;
+            font-family: monospace;
+            font-size: 0.85rem;
+            word-break: break-all;
+        }
+
+        .copy-widget i {
+            cursor: pointer;
+            color: var(--accent-secondary);
+            font-size: 1.1rem;
+            transition: transform 0.1s;
+        }
+
+        .copy-widget i:active {
+            transform: scale(0.85);
+        }
+
+        .warning-box {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            line-height: 1.2rem;
+            border-left: 2px solid var(--accent-primary);
+            padding-left: 0.75rem;
+        }
+
+        /* Decryption Viewer Panel */
+        .decrypt-box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1.25rem;
+            text-align: center;
+        }
+
+        .burned-badge {
+            background: rgba(255, 94, 94, 0.12);
+            color: var(--danger);
+            border: 1px solid rgba(255, 94, 94, 0.25);
+            padding: 0.5rem 1rem;
+            border-radius: 100px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .secret-viewer {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1.25rem;
+            font-family: monospace;
+            text-align: left;
+            white-space: pre-wrap;
+            word-break: break-all;
+            font-size: 0.95rem;
+            max-height: 250px;
+            overflow-y: auto;
+        }
+
+        .error-message {
+            color: var(--danger);
+            font-weight: 600;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .error-message i {
+            font-size: 2.2rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="glass-card">
+        <div class="header">
+            <h1><i class="fa-solid fa-vault"></i> PasteSafe</h1>
+            <p id="sub-header">Zero-Knowledge Secure Paste Portal</p>
+        </div>
+
+        <!-- 1. Creation Panel -->
+        <div id="panel-create" class="panel active">
+            <textarea id="secret-input" placeholder="Type or paste your sensitive note, password, or keys here..." required></textarea>
+            <div class="form-row">
+                <div class="select-wrapper">
+                    <label for="expiry-select">Destruct After</label>
+                    <select id="expiry-select">
+                        <option value="300">5 Minutes</option>
+                        <option value="3600" selected>1 Hour</option>
+                        <option value="86400">1 Day</option>
+                    </select>
+                </div>
+                <button onclick="encryptAndUpload()"><i class="fa-solid fa-lock"></i> Encrypt & Share</button>
+            </div>
+        </div>
+
+        <!-- 2. Link Created Display Panel -->
+        <div id="panel-success" class="panel">
+            <div class="result-box">
+                <div class="result-title"><i class="fa-solid fa-circle-check"></i> Paste Encrypted Client-Side</div>
+                <div class="copy-widget">
+                    <span id="secure-link-text">http://localhost:5003/view/123#key</span>
+                    <i class="fa-solid fa-copy" onclick="copySecureLink()"></i>
+                </div>
+            </div>
+            <div class="warning-box">
+                <strong>Important:</strong> The decryption password is local to the URL fragment after the hash (#). It is <strong>never</strong> sent to the server. If you lose this link, your secret is lost forever.
+            </div>
+            <button onclick="resetPortal()"><i class="fa-solid fa-plus"></i> Share Another Secret</button>
+        </div>
+
+        <!-- 3. Decryption Prompt Panel -->
+        <div id="panel-decrypt" class="panel">
+            <div class="decrypt-box">
+                <i class="fa-solid fa-envelope-open-text" style="font-size: 3rem; color: var(--accent-primary);"></i>
+                <h3>Someone shared a secure secret with you</h3>
+                <p style="color: var(--text-muted); font-size: 0.9rem;">Once you reveal this paste, it will be burned on the server. You can only view it once.</p>
+                <button onclick="fetchAndDecrypt()"><i class="fa-solid fa-key"></i> Reveal Secret</button>
+            </div>
+        </div>
+
+        <!-- 4. Plaintext Viewer Panel -->
+        <div id="panel-viewer" class="panel">
+            <div class="burned-badge"><i class="fa-solid fa-fire"></i> Wiped from Database</div>
+            <div class="secret-viewer" id="secret-viewer-text">
+                Plaintext output...
+            </div>
+            <div class="copy-widget" style="background: transparent; border: none; padding: 0; justify-content: flex-end;">
+                <button onclick="copyPlaintext()"><i class="fa-solid fa-copy"></i> Copy Secret</button>
+            </div>
+            <button style="margin-top: 1rem; background: rgba(255, 255, 255, 0.05); color: var(--text-main); border: 1px solid var(--border-color);" onclick="goToHome()"><i class="fa-solid fa-home"></i> Go to Homepage</button>
+        </div>
+
+        <!-- 5. Error View Panel -->
+        <div id="panel-error" class="panel">
+            <div class="decrypt-box">
+                <div class="error-message">
+                    <i class="fa-solid fa-circle-xmark"></i>
+                    <h3 id="error-title">Secret Not Found</h3>
+                </div>
+                <p style="color: var(--text-muted); font-size: 0.9rem;" id="error-desc">This link has already been read, burned, or has expired.</p>
+                <button onclick="goToHome()"><i class="fa-solid fa-home"></i> Create New Paste</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Check URL route mapping
+        document.addEventListener("DOMContentLoaded", () => {
+            const path = window.location.pathname;
+            if (path.startsWith("/view/")) {
+                showPanel("panel-decrypt");
+                document.getElementById("sub-header").innerText = "Secure Secret Decryption Viewer";
+            }
+        });
+
+        function showPanel(panelId) {
+            document.querySelectorAll(".panel").forEach(p => p.classList.remove("active"));
+            document.getElementById(panelId).classList.add("active");
+        }
+
+        // --- CRYPTOGRAPHIC UTILITIES ---
+
+        function bufToHex(buffer) {
+            return Array.prototype.map.call(new Uint8Array(buffer), x => ('00' + x.toString(16)).slice(-2)).join('');
+        }
+
+        function hexToBuf(hex) {
+            const view = new Uint8Array(hex.length / 2);
+            for (let i = 0; i < view.length; i++) {
+                view[i] = parseInt(hex.substr(i * 2, 2), 16);
+            }
+            return view.buffer;
+        }
+
+        // --- ACTION HANDLERS ---
+
+        async function encryptAndUpload() {
+            const secret = document.getElementById("secret-input").value;
+            const ttl = document.getElementById("expiry-select").value;
+            
+            if (!secret.trim()) {
+                alert("Please enter a secret message to share.");
+                return;
+            }
+
+            try {
+                // 1. Generate AES-256-GCM symmetric key
+                const key = await window.crypto.subtle.generateKey(
+                    { name: "AES-GCM", length: 256 },
+                    true,
+                    ["encrypt", "decrypt"]
+                );
+
+                // 2. Export key to JWK to embed in the URL anchor (#)
+                const exportedKey = await window.crypto.subtle.exportKey("jwk", key);
+                const keyStr = exportedKey.k; // base64url encoded key
+
+                // 3. Encrypt the secret
+                const iv = window.crypto.getRandomValues(new Uint8Array(12)); // 12-byte IV for GCM
+                const enc = new TextEncoder();
+                const ciphertextBuffer = await window.crypto.subtle.encrypt(
+                    { name: "AES-GCM", iv: iv },
+                    key,
+                    enc.encode(secret)
+                );
+
+                // 4. Convert arrays to hex strings
+                const ciphertextHex = bufToHex(ciphertextBuffer);
+                const ivHex = bufToHex(iv.buffer);
+
+                // 5. Upload ciphertext & iv to the server
+                const resp = await fetch("/api/pastes", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        ciphertext: ciphertextHex,
+                        iv: ivHex,
+                        ttl: parseInt(ttl)
+                    })
+                });
+
+                const data = await resp.json();
+                if (resp.status === 201) {
+                    const pasteId = data.paste_id;
+                    const secureLink = `${window.location.origin}/view/${pasteId}#${keyStr}`;
+                    document.getElementById("secure-link-text").innerText = secureLink;
+                    showPanel("panel-success");
+                } else {
+                    alert("Error: " + data.error);
+                }
+            } catch (err) {
+                console.error("Cryptographic operation failed:", err);
+                alert("Encryption failed: Make sure you are in a secure context (localhost or HTTPS).");
+            }
+        }
+
+        async function fetchAndDecrypt() {
+            const pathParts = window.location.pathname.split("/");
+            const pasteId = pathParts[pathParts.length - 1];
+            const keyStr = window.location.hash.substring(1);
+
+            if (!keyStr) {
+                showError("Decryption Key Missing", "The secret decryption key is missing from the URL. Decryption is impossible.");
+                return;
+            }
+
+            try {
+                // 1. Fetch ciphertext from the server (this burns it on read)
+                const resp = await fetch(`/api/pastes/${pasteId}`);
+                const data = await resp.json();
+
+                if (resp.status !== 200) {
+                    showError("Secret Burned or Expired", data.error || "This paste could not be loaded.");
+                    return;
+                }
+
+                const { ciphertext, iv } = data;
+
+                // 2. Import the JWK key from URL hash
+                const key = await window.crypto.subtle.importKey(
+                    "jwk",
+                    {
+                        kty: "oct",
+                        k: keyStr,
+                        alg: "A256GCM",
+                        ext: true
+                    },
+                    { name: "AES-GCM" },
+                    true,
+                    ["decrypt"]
+                );
+
+                // 3. Decrypt ciphertext using local key
+                const ciphertextBuffer = hexToBuf(ciphertext);
+                const ivBuffer = hexToBuf(iv);
+
+                const decryptedBuffer = await window.crypto.subtle.decrypt(
+                    { name: "AES-GCM", iv: new Uint8Array(ivBuffer) },
+                    key,
+                    ciphertextBuffer
+                );
+
+                // 4. Output plaintext
+                const dec = new TextDecoder();
+                const plaintext = dec.decode(decryptedBuffer);
+
+                document.getElementById("secret-viewer-text").innerText = plaintext;
+                showPanel("panel-viewer");
+
+                // Wipe hash from URL so it doesn't leak in browser logs
+                window.location.hash = "";
+
+            } catch (err) {
+                console.error("Decryption failed:", err);
+                showError("Decryption Mismatch", "The link ciphertext was fetched, but decryption failed. This suggests the URL anchor key was altered or is corrupt.");
+            }
+        }
+
+        function copySecureLink() {
+            const text = document.getElementById("secure-link-text").innerText;
+            navigator.clipboard.writeText(text).then(() => {
+                const icon = document.querySelector("#panel-success .copy-widget i");
+                icon.className = "fa-solid fa-check";
+                setTimeout(() => { icon.className = "fa-solid fa-copy"; }, 1500);
+            });
+        }
+
+        function copyPlaintext() {
+            const text = document.getElementById("secret-viewer-text").innerText;
+            navigator.clipboard.writeText(text).then(() => {
+                const btn = document.querySelector("#panel-viewer .copy-widget button");
+                btn.innerHTML = `<i class="fa-solid fa-check"></i> Copied`;
+                setTimeout(() => { btn.innerHTML = `<i class="fa-solid fa-copy"></i> Copy Secret`; }, 1500);
+            });
+        }
+
+        function showError(title, desc) {
+            document.getElementById("error-title").innerText = title;
+            document.getElementById("error-desc").innerText = desc;
+            showPanel("panel-error");
+        }
+
+        function resetPortal() {
+            document.getElementById("secret-input").value = "";
+            showPanel("panel-create");
+        }
+
+        function goToHome() {
+            window.location.href = "/";
+        }
+    </script>
+</body>
+</html>

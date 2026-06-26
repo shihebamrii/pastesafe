@@ -2,6 +2,8 @@
 
 A secure, zero-knowledge secret-sharing web portal. It allows users to share passwords, credentials, configuration details, or sensitive notes via self-destructing, one-time viewing links. 
 
+🔗 **Live Demo:** [https://pastesafe-frontend.vercel.app](https://pastesafe-frontend.vercel.app)
+
 It implements client-side **AES-256-GCM** encryption using the browser's native Web Crypto API. The server only handles encrypted payloads and remains completely blind to the plaintext.
 
 ---
